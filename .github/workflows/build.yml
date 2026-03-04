@@ -23,11 +23,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
-
-      # [修复 2] 设置 Android SDK (原配置缺失，必加)
-      - name: set up Android SDK
-        uses: android-actions/setup-android@v3
-        
+          
       - name: Install ninja
         run: sudo apt-get update && sudo apt-get install ninja-build
         
