@@ -23,7 +23,6 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # [修复核心] 设置 Android SDK 并自动接受许可证
       - name: set up Android SDK
         uses: android-actions/setup-android@v3
         
@@ -51,8 +50,9 @@ jobs:
       - name: Building project
         run: ./gradlew assembleDebug --no-daemon
         
+      # [修复] 升级到 v4 版本
       - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-output-${{ github.run_number }}
           path: |
