@@ -2,9 +2,10 @@ name: Build test
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "fix_workflow" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:  # [修复 1] 允许手动触发
 
 jobs:
   build:
@@ -13,7 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          submodules: recursive
+          submodules: recursive  # 确保子模块被克隆
+      
+      # [修复 2] 设置 JDK
       - name: set up JDK
         uses: actions/setup-java@v3
         with:
@@ -21,13 +24,33 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
+      # [修复 2] 设置 Android SDK (原配置缺失，必加)
+      - name: set up Android SDK
+        uses: android-actions/setup-android@v3
+        
       - name: Install ninja
         run: sudo apt-get update && sudo apt-get install ninja-build
+        
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1
         with:
-          cmake-version: '3.31.1'
+          cmake-version: '3.28.0'  # [修复 5] 改为稳定版本，防止找不到
+      
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+        
+      # [修复 3] 构建 Debug 版本，便于逆向分析
       - name: Building project
-        run: ./gradlew build
+        run: ./gradlew assembleDebug --no-daemon
+        
+      # [修复 4] 上传编译产物，否则无法下载
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-output-${{ github.run_number }}
+          path: |
+            **/build/outputs/apk/**/*.apk
+            **/build/outputs/**/*.aar
+            **/build/intermediates/cmake/**/obj/**/*.so
+          retention-days: 5
+          if-no-files-found: warn
